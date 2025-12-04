@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📸 PhotoBooth - Chào mừng!</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .page-container {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .container {
+            background: white;
+            max-width: 500px;
+            width: 100%;
+            max-height: 95vh;
+            padding: 30px 30px;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            text-align: center;
+            overflow-y: auto;
+        }
+        .logo {
+            font-size: 50px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 5px;
+            font-size: 28px;
+        }
+        .subtitle {
+            color: #666;
+            margin-bottom: 25px;
+            font-size: 14px;
+        }
+        form {
+            margin-top: 20px;
+        }
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .input-group input {
+            width: 100%;
+            padding: 15px 18px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            outline: none;
+            transition: all 0.3s;
+        }
+        .input-group input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+        .input-group label {
+            position: absolute;
+            left: 20px;
+            top: 18px;
+            color: #999;
+            pointer-events: none;
+            transition: all 0.3s;
+            font-size: 18px;
+        }
+        .input-group input:focus + label,
+        .input-group input:not(:placeholder-shown) + label {
+            top: -10px;
+            left: 15px;
+            font-size: 12px;
+            color: #667eea;
+            background: white;
+            padding: 0 5px;
+        }
+        button {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: bold;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+        button:active {
+            transform: translateY(0);
+        }
+        .features {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .feature {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            text-align: left;
+            color: #666;
+            font-size: 14px;
+        }
+        .feature-icon {
+            font-size: 20px;
+            margin-right: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="container">
+        <div class="logo">📸</div>
+        <h1>PhotoBooth</h1>
+        <p class="subtitle">Chụp ảnh - Ghép frame - In ngay!</p>
+
+        <form method="POST" action="/">
+            {% csrf_token %}
+            <div class="input-group">
+                <input 
+                    type="tel" 
+                    name="phone" 
+                    placeholder=" " 
+                    required 
+                    pattern="[0-9]{10,11}"
+                    maxlength="11"
+                >
+                <label>Số điện thoại của bạn</label>
+            </div>
+            <button type="submit">🚀 Bắt đầu chụp ảnh</button>
+        </form>
+
+        <div class="features">
+            <div class="feature">
+                <span class="feature-icon">📷</span>
+                <span>Chụp hoặc upload ảnh dễ dàng</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🖼️</span>
+                <span>Chọn frame đẹp mắt</span>
+            </div>
+            <div class="feature">
+                <span class="feature-icon">🖨️</span>
+                <span>In ảnh nhanh chóng</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Auto format phone number
+        document.querySelector('input[name="phone"]').addEventListener('input', function(e) {
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+    </script>
+</body>
+</html>

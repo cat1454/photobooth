@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xem Thử - Photobooth</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .container {
+            max-width: 900px;
+            width: 100%;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            padding: 40px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            color: #333;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            color: #666;
+            font-size: 1.1rem;
+        }
+        .preview-frame {
+            position: relative;
+            max-width: 100%;
+            margin: 0 auto 30px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f5f5f5;
+        }
+        .preview-frame canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 10px;
+        }
+        .status {
+            text-align: center;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+        .status.complete {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.incomplete {
+            background: #fed7aa;
+            color: #92400e;
+        }
+        .slots-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .slot-card {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .slot-card .thumbnail {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 10px;
+        }
+        .slot-card .label {
+            font-size: 0.9rem;
+            color: #666;
+        }
+        .actions {
+            display: flex;
+            gap: 15px;
+        }
+        .btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            transition: opacity 0.3s ease;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .btn-back {
+            background: #9ca3af;
+            color: white;
+        }
+        .btn-render {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+        .btn-render:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>👁️ XEM THỬ FRAME</h1>
+            <p>Kiểm tra trước khi ghép chính thức</p>
+        </div>
+
+        {% if has_all_photos %}
+        <div class="status complete">
+            ✅ Đã điền đủ {{ required_slots }} ảnh! Sẵn sàng để ghép.
+        </div>
+        {% else %}
+        <div class="status incomplete">
+            ⚠️ Còn thiếu {{ required_slots|add:"-"|add:assigned_slots.count }} ảnh. Vui lòng quay lại và upload thêm.
+        </div>
+        {% endif %}
+
+        <div class="preview-frame">
+            <canvas id="previewCanvas"></canvas>
+        </div>
+
+        <div class="slots-info">
+            {% for slot in assigned_slots %}
+            <div class="slot-card">
+                <img src="{{ slot.photo.image.url }}" class="thumbnail" alt="Slot {{ slot.slot_index }}">
+                <div class="label">Slot {{ slot.slot_index|add:1 }}</div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div class="actions">
+            <a href="/session/{{ phone }}/slot-manager/" class="btn btn-back">
+                ← Quay Lại Chỉnh Sửa
+            </a>
+            
+            <form method="POST" action="/session/{{ phone }}/finalize-render/" style="flex: 1;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-render" {% if not has_all_photos %}disabled{% endif %}>
+                    ✨ Ghép Chính Thức
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Frame và slots data
+        const frameData = {
+            url: '{{ frame.image.url }}',
+            width: {{ frame.layout_json.w }},
+            height: {{ frame.layout_json.h }},
+            slots: {{ frame.layout_json.slots|safe }}
+        };
+        
+        const assignedSlots = [
+            {% for slot in assigned_slots %}
+            {
+                index: {{ slot.slot_index }},
+                photoUrl: '{{ slot.photo.image.url }}'
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+        
+        let canvas, ctx;
+        let frameImage = new Image();
+        let photoImages = {};
+        
+        // Crop image giống Python
+        function cropImageToCenter(img, targetWidth, targetHeight) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const imgRatio = img.width / img.height;
+            const slotRatio = targetWidth / targetHeight;
+            
+            let cropWidth, cropHeight, cropX, cropY;
+            
+            if (imgRatio > slotRatio) {
+                cropHeight = img.height;
+                cropWidth = img.height * slotRatio;
+                cropX = (img.width - cropWidth) / 2;
+                cropY = 0;
+            } else {
+                cropWidth = img.width;
+                cropHeight = img.width / slotRatio;
+                cropX = 0;
+                cropY = (img.height - cropHeight) / 2;
+            }
+            
+            canvas.width = targetWidth;
+            canvas.height = targetHeight;
+            
+            ctx.drawImage(
+                img,
+                cropX, cropY, cropWidth, cropHeight,
+                0, 0, targetWidth, targetHeight
+            );
+            
+            return canvas;
+        }
+        
+        // Render canvas giống Python render_frame
+        function renderPreview() {
+            if (!canvas || !ctx || !frameImage.complete) return;
+            
+            canvas.width = frameData.width;
+            canvas.height = frameData.height;
+            
+            // White background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw frame
+            ctx.drawImage(frameImage, 0, 0, frameData.width, frameData.height);
+            
+            // Draw photos
+            assignedSlots.forEach(assigned => {
+                const slot = frameData.slots[assigned.index];
+                const img = photoImages[assigned.index];
+                
+                if (img && img.complete && slot) {
+                    const croppedCanvas = cropImageToCenter(
+                        img,
+                        slot.w,
+                        slot.h
+                    );
+                    
+                    ctx.drawImage(
+                        croppedCanvas,
+                        slot.x,
+                        slot.y
+                    );
+                }
+            });
+        }
+        
+        // Initialize
+        function initCanvas() {
+            canvas = document.getElementById('previewCanvas');
+            ctx = canvas.getContext('2d');
+            
+            frameImage.crossOrigin = 'anonymous';
+            frameImage.onload = () => {
+                if (assignedSlots.length === 0) {
+                    renderPreview();
+                    return;
+                }
+                
+                let loadedCount = 0;
+                assignedSlots.forEach(assigned => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        loadedCount++;
+                        if (loadedCount === assignedSlots.length) {
+                            renderPreview();
+                        }
+                    };
+                    img.onerror = () => {
+                        loadedCount++;
+                        if (loadedCount === assignedSlots.length) {
+                            renderPreview();
+                        }
+                    };
+                    img.src = assigned.photoUrl;
+                    photoImages[assigned.index] = img;
+                });
+            };
+            frameImage.src = frameData.url;
+        }
+        
+        window.addEventListener('load', initCanvas);
+    </script>
+</body>
+</html>

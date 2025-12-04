@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản Lý Slots - Photobooth</title>
+    <link href="https://cdn.jsdelivr.net/npm/animate.css@4.1.1/animate.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        :root {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #ffffff;
+            --card-shadow: 0 18px 50px rgba(0,0,0,0.20), 0 0 0 1px rgba(0,0,0,0.04);
+            --primary: #667eea;
+            --primary-soft: rgba(102,126,234,0.15);
+            --accent: #f59e0b;
+            --accent-strong: #d97706;
+            --success: #10b981;
+            --success-strong: #059669;
+            --border-subtle: #e5e7eb;
+            --text-main: #111827;
+            --text-subtle: #6b7280;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            padding: 18px;
+            overflow-x: hidden;
+        }
+        .container {
+            max-width: 1480px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(560px, 1.1fr) minmax(380px, 0.9fr);
+            gap: 24px;
+            align-items: flex-start;
+        }
+        .main-section {
+            background: var(--card-bg);
+            border-radius: 22px;
+            box-shadow: var(--card-shadow);
+            padding: 32px 32px 26px;
+            transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: fadeInUp 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .main-section:hover {
+            transform: translateY(-2px);
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(22px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 18px;
+        }
+        .header h1 {
+            color: var(--text-main);
+            font-size: 1.8rem;
+            margin-bottom: 4px;
+        }
+        .header p {
+            color: var(--text-subtle);
+            font-size: 0.98rem;
+        }
+
+        /* Progress bar */
+        .progress-bar {
+            background: #f3f4f6;
+            height: 34px;
+            border-radius: 999px;
+            overflow: hidden;
+            margin-bottom: 20px;
+            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--success), var(--success-strong));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 0.95rem;
+            position: relative;
+            overflow: hidden;
+            transition: width 0.35s cubic-bezier(0.65, 0, 0.35, 1);
+        }
+        .progress-fill::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            animation: shimmer 2s infinite;
+        }
+        @keyframes shimmer {
+            to { left: 100%; }
+        }
+
+        /* Frame preview */
+        .frame-preview {
+            position: relative;
+            width: 100%;
+            margin: 0 auto 22px;
+            border-radius: 18px;
+            overflow: hidden;
+            background: radial-gradient(circle at top, #f9fafb, #e5e7eb);
+            box-shadow: 0 12px 36px rgba(0,0,0,0.2), 0 0 0 1px rgba(0,0,0,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .frame-preview canvas {
+            max-width: 100%;
+            max-height: 56vh;
+            display: block;
+            border-radius: 18px;
+        }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 6px;
+        }
+        .btn {
+            flex: 1;
+            padding: 14px 18px;
+            border: none;
+            border-radius: 999px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: block;
+            text-align: center;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.14);
+            position: relative;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.28);
+            transform: translate(-50%, -50%);
+            transition: width 0.5s, height 0.5s;
+        }
+        .btn:hover::before {
+            width: 220px;
+            height: 220px;
+        }
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 16px rgba(0,0,0,0.22);
+        }
+        .btn:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+        }
+        .btn-preview {
+            background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+            color: white;
+        }
+        .btn-render {
+            background: linear-gradient(135deg, var(--success), var(--success-strong));
+            color: white;
+        }
+        .btn-render:disabled {
+            background: #d1d5db;
+            cursor: not-allowed;
+            opacity: 0.7;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+        }
+        .upload-section,
+        .photos-library {
+            background: var(--card-bg);
+            border-radius: 22px;
+            padding: 26px 24px;
+            box-shadow: var(--card-shadow);
+        }
+        .upload-section {
+            animation: fadeInRight 0.45s cubic-bezier(0.4, 0, 0.2, 1) 0.05s both;
+        }
+        .photos-library {
+            animation: fadeInRight 0.45s cubic-bezier(0.4, 0, 0.2, 1) 0.1s both;
+            max-height: 640px;
+            overflow-y: auto;
+        }
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(20px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+        .upload-section h3,
+        .photos-library h3 {
+            margin-bottom: 14px;
+            color: var(--text-main);
+            font-size: 1.05rem;
+            text-align: center;
+        }
+        .upload-box {
+            border: 2px dashed var(--primary);
+            border-radius: 16px;
+            padding: 30px 16px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+            background: linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);
+            position: relative;
+        }
+        .upload-box::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: 16px;
+            background: linear-gradient(135deg, var(--primary-soft), rgba(118, 75, 162, 0.1));
+            opacity: 0;
+            transition: opacity 0.25s ease;
+        }
+        .upload-box:hover::after {
+            opacity: 1;
+        }
+        .upload-box:hover {
+            border-color: #5568d3;
+            transform: translateY(-1px);
+            box-shadow: 0 5px 16px rgba(102,126,234,0.25);
+        }
+        .upload-box:active {
+            transform: translateY(0);
+        }
+        .upload-box input {
+            display: none;
+        }
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 8px;
+        }
+        .upload-text {
+            color: var(--primary);
+            font-weight: 600;
+            font-size: 0.98rem;
+            margin-bottom: 4px;
+        }
+        .upload-hint {
+            color: var(--text-subtle);
+            font-size: 0.85rem;
+        }
+
+        /* Photos library */
+        .photos-library::-webkit-scrollbar {
+            width: 7px;
+        }
+        .photos-library::-webkit-scrollbar-track {
+            background: #f3f4f6;
+            border-radius: 10px;
+        }
+        .photos-library::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, var(--primary), #764ba2);
+            border-radius: 10px;
+        }
+        .photos-library::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(135deg, #5568d3, #6a3f8f);
+        }
+        .photos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 10px;
+        }
+        .photo-item {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 12px;
+            overflow: hidden;
+            cursor: grab;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.18);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #111827;
+        }
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+        .photo-item:hover {
+            transform: translateY(-4px) scale(1.03);
+            box-shadow: 0 8px 22px rgba(0,0,0,0.28);
+        }
+        .photo-item:active {
+            cursor: grabbing;
+            transform: scale(0.96);
+        }
+        .photo-item.dragging {
+            opacity: 0.55;
+            transform: scale(0.92);
+            box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+        }
+        .photo-item::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top, rgba(0,0,0,0.0), rgba(0,0,0,0.25));
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            z-index: 1;
+        }
+        .photo-item:hover::before {
+            opacity: 1;
+        }
+        .photo-item.used::after {
+            content: 'Đã dùng';
+            position: absolute;
+            bottom: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15,118,110,0.9);
+            color: #ecfdf5;
+            font-size: 0.72rem;
+            padding: 2px 8px;
+            border-radius: 999px;
+            z-index: 2;
+        }
+
+        /* Responsive */
+        @media (max-width: 1300px) {
+            .container {
+                grid-template-columns: 1fr;
+                max-width: 960px;
+            }
+            .sidebar {
+                display: grid;
+                grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+                gap: 16px;
+            }
+            .frame-preview canvas {
+                max-height: 560px;
+            }
+        }
+        @media (max-width: 900px) {
+            body {
+                padding: 14px;
+            }
+            .sidebar {
+                grid-template-columns: 1fr;
+            }
+            .main-section {
+                padding: 22px 18px 18px;
+            }
+            .upload-section,
+            .photos-library {
+                padding: 18px 16px;
+            }
+            .header h1 {
+                font-size: 1.4rem;
+            }
+            .frame-preview canvas {
+                max-height: 480px;
+            }
+            .btn {
+                padding: 12px 14px;
+                font-size: 0.95rem;
+            }
+        }
+        @media (max-width: 520px) {
+            .photos-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+            .actions {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Main Section: Frame Preview -->
+        <div class="main-section">
+            <div class="header">
+                <h1>📸 QUẢN LÝ SLOTS</h1>
+                <p>Kéo & thả ảnh từ thư viện vào các ô trên frame</p>
+            </div>
+
+            <div class="progress-bar">
+                <div
+                    class="progress-fill"
+                    id="progressFill"
+                    style="width: calc({{ filled_count }} / {{ total_slots }} * 100%);"
+                >
+                    <span id="progressText">{{ filled_count }} / {{ total_slots }} Slots</span>
+                </div>
+            </div>
+
+            <div class="frame-preview">
+                <canvas id="previewCanvas"></canvas>
+            </div>
+
+            <div class="actions">
+                <a href="/session/{{ phone }}/preview-frame/" class="btn btn-preview">
+                    👁️ Xem Thử
+                </a>
+                <form method="POST" action="/session/{{ phone }}/finalize-render/" style="flex: 1;">
+                    {% csrf_token %}
+                    <button
+                        type="submit"
+                        class="btn btn-render"
+                        id="finalizeBtn"
+                        {% if not all_filled %}disabled{% endif %}
+                    >
+                        ✨ Ghép Ảnh Chính Thức
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Sidebar: Upload & Library -->
+        <div class="sidebar">
+            <div class="upload-section">
+                <h3>📤 Upload Ảnh</h3>
+                <form method="POST" action="/session/{{ phone }}/upload/" enctype="multipart/form-data" id="uploadForm">
+                    {% csrf_token %}
+                    <label class="upload-box" for="photoInput">
+                        <div class="upload-icon">📁</div>
+                        <div class="upload-text">Click để chọn ảnh</div>
+                        <div class="upload-hint">Hoặc kéo thả file vào đây</div>
+                        <input type="file" id="photoInput" name="photos" multiple accept="image/*">
+                    </label>
+                </form>
+            </div>
+
+            <div class="photos-library">
+                <h3>🖼️ Thư Viện ({{ uploaded_photos.count }})</h3>
+                <div class="photos-grid" id="photosGrid">
+                    {% for photo in uploaded_photos %}
+                    <div
+                        class="photo-item"
+                        draggable="true"
+                        data-photo-id="{{ photo.id }}"
+                        data-photo-url="{{ photo.image.url }}"
+                    >
+                        <img src="{{ photo.image.url }}" alt="Photo {{ photo.id }}">
+                    </div>
+                    {% empty %}
+                    <p style="grid-column: 1 / -1; text-align: center; color: #999; padding: 16px;">
+                        Chưa có ảnh. Upload để bắt đầu!
+                    </p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ===== Django data =====
+        const phone = '{{ phone }}';
+
+        const frameData = {
+            url: '{{ frame.image.url }}',
+            width: {{ frame.layout_json.w }},
+            height: {{ frame.layout_json.h }},
+            slots: {{ frame.layout_json.slots|safe }}
+        };
+
+        const slotsData = [
+            {% for slot in slots_info %}
+            {
+                index: {{ slot.index }},
+                position: {
+                    x: {{ slot.position.x }},
+                    y: {{ slot.position.y }},
+                    w: {{ slot.position.w }},
+                    h: {{ slot.position.h }}
+                },
+                photoUrl: {% if slot.assigned_photo %}'{{ slot.assigned_photo.image.url }}'{% else %}null{% endif %},
+                photoId: {% if slot.assigned_photo %}{{ slot.assigned_photo.id }}{% else %}null{% endif %},
+                isFilled: {{ slot.is_filled|lower }}
+            }{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ];
+
+        const totalSlots = {{ total_slots }};
+        let filledCount = {{ filled_count }};
+
+        // ===== Canvas & images =====
+        let canvas, ctx;
+        let frameImage = new Image();
+        let photoImages = {};
+        let highlightedSlotIndex = null;
+
+        // ===== CSRF helper (cookie-based) =====
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+        const csrfToken = getCookie('csrftoken');
+
+        // ===== Crop image to center (same logic as backend) =====
+        function cropImageToCenter(img, targetWidth, targetHeight) {
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+
+            const imgRatio = img.width / img.height;
+            const slotRatio = targetWidth / targetHeight;
+
+            let cropWidth, cropHeight, cropX, cropY;
+
+            if (imgRatio > slotRatio) {
+                // Ảnh rộng hơn → crop chiều rộng
+                cropHeight = img.height;
+                cropWidth = img.height * slotRatio;
+                cropX = (img.width - cropWidth) / 2;
+                cropY = 0;
+            } else {
+                // Ảnh cao hơn → crop chiều cao
+                cropWidth = img.width;
+                cropHeight = img.width / slotRatio;
+                cropX = 0;
+                cropY = (img.height - cropHeight) / 2;
+            }
+
+            tempCanvas.width = targetWidth;
+            tempCanvas.height = targetHeight;
+
+            tempCtx.drawImage(
+                img,
+                cropX, cropY, cropWidth, cropHeight,
+                0, 0, targetWidth, targetHeight
+            );
+
+            return tempCanvas;
+        }
+
+        // ===== Render canvas preview =====
+        function renderPreview() {
+            if (!canvas || !ctx || !frameImage.complete) return;
+
+            canvas.width = frameData.width;
+            canvas.height = frameData.height;
+
+            // Background
+            ctx.fillStyle = '#FFFFFF';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Frame PNG
+            ctx.drawImage(frameImage, 0, 0, frameData.width, frameData.height);
+
+            // Draw slots (photos or placeholder)
+            slotsData.forEach(slot => {
+                const { x, y, w, h } = slot.position;
+
+                if (slot.photoUrl && photoImages[slot.index] && photoImages[slot.index].complete) {
+                    const img = photoImages[slot.index];
+                    const croppedCanvas = cropImageToCenter(img, w, h);
+                    ctx.drawImage(croppedCanvas, x, y);
+                } else {
+                    // Empty slot
+                    ctx.strokeStyle = '#667eea';
+                    ctx.lineWidth = 3;
+                    ctx.strokeRect(x, y, w, h);
+
+                    ctx.fillStyle = 'rgba(102,126,234,0.08)';
+                    ctx.fillRect(x, y, w, h);
+
+                    ctx.font = 'bold ' + Math.max(32, Math.min(w, h) / 3) + 'px system-ui, Arial';
+                    ctx.fillStyle = '#667eea';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(
+                        (slot.index + 1).toString(),
+                        x + w / 2,
+                        y + h / 2
+                    );
+                }
+
+                // Highlight if being targeted (drag over)
+                if (highlightedSlotIndex === slot.index) {
+                    ctx.save();
+                    ctx.lineWidth = 6;
+                    ctx.strokeStyle = '#f59e0b';
+                    ctx.setLineDash([14, 8]);
+                    ctx.strokeRect(x + 3, y + 3, w - 6, h - 6);
+                    ctx.restore();
+                }
+            });
+        }
+
+        // ===== Progress & button UI =====
+        function updateProgressUI() {
+            filledCount = slotsData.filter(s => s.photoUrl).length;
+            const percent = totalSlots > 0 ? (filledCount / totalSlots) * 100 : 0;
+
+            const progressFill = document.getElementById('progressFill');
+            const progressText = document.getElementById('progressText');
+            const finalizeBtn = document.getElementById('finalizeBtn');
+
+            if (progressFill) {
+                progressFill.style.width = percent + '%';
+            }
+            if (progressText) {
+                progressText.textContent = `${filledCount} / ${totalSlots} Slots`;
+            }
+            if (finalizeBtn) {
+                finalizeBtn.disabled = (filledCount !== totalSlots);
+            }
+        }
+
+        // ===== Mark used photos in library =====
+        function markUsedPhotos() {
+            const usedIds = new Set(
+                slotsData.filter(s => s.photoId !== null && s.photoId !== undefined)
+                         .map(s => String(s.photoId))
+            );
+
+            document.querySelectorAll('.photo-item').forEach(item => {
+                const pid = item.dataset.photoId;
+                if (usedIds.has(String(pid))) {
+                    item.classList.add('used');
+                } else {
+                    item.classList.remove('used');
+                }
+            });
+        }
+
+        // ===== Assign / remove without reload =====
+        function assignPhotoToSlot(photoId, slotIndex, photoUrl) {
+            slotIndex = parseInt(slotIndex);
+            fetch(`/session/${phone}/assign-slot/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken || ''
+                },
+                body: JSON.stringify({
+                    photo_id: photoId,
+                    slot_index: slotIndex
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Lỗi: ' + (data.error || 'Không thể gán ảnh.'));
+                    return;
+                }
+
+                const slot = slotsData.find(s => s.index === slotIndex);
+                if (!slot) return;
+
+                slot.photoUrl = photoUrl;
+                slot.photoId = photoId;
+                slot.isFilled = true;
+
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = function () {
+                    photoImages[slot.index] = img;
+                    renderPreview();
+                };
+                img.onerror = function () {
+                    console.warn('Không load được ảnh slot', slot.index);
+                    renderPreview();
+                };
+                img.src = photoUrl;
+
+                highlightedSlotIndex = null;
+                updateProgressUI();
+                markUsedPhotos();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Có lỗi mạng xảy ra khi gán ảnh.');
+            });
+        }
+
+        function removeFromSlot(slotIndex) {
+            slotIndex = parseInt(slotIndex);
+            fetch(`/session/${phone}/remove-slot/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken || ''
+                },
+                body: JSON.stringify({
+                    slot_index: slotIndex
+                })
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (!data.success) {
+                    alert('Lỗi: ' + (data.error || 'Không thể xóa ảnh.'));
+                    return;
+                }
+
+                const slot = slotsData.find(s => s.index === slotIndex);
+                if (!slot) return;
+
+                slot.photoUrl = null;
+                slot.photoId = null;
+                slot.isFilled = false;
+
+                delete photoImages[slot.index];
+
+                highlightedSlotIndex = null;
+                updateProgressUI();
+                markUsedPhotos();
+                renderPreview();
+            })
+            .catch(err => {
+                console.error('Error:', err);
+                alert('Có lỗi mạng xảy ra khi xóa ảnh.');
+            });
+        }
+
+        // ===== Drag & Drop =====
+        let draggedPhoto = null;
+
+        function setupLibraryDrag() {
+            document.querySelectorAll('.photo-item').forEach(item => {
+                item.addEventListener('dragstart', function () {
+                    draggedPhoto = {
+                        id: parseInt(this.dataset.photoId),
+                        url: this.dataset.photoUrl
+                    };
+                    this.classList.add('dragging');
+                });
+
+                item.addEventListener('dragend', function () {
+                    this.classList.remove('dragging');
+                    draggedPhoto = null;
+                    highlightedSlotIndex = null;
+                    renderPreview();
+                });
+            });
+        }
+
+        function slotFromCanvasCoords(x, y) {
+            for (let slot of slotsData) {
+                const { x: sx, y: sy, w, h } = slot.position;
+                if (x >= sx && x <= sx + w && y >= sy && y <= sy + h) {
+                    return slot;
+                }
+            }
+            return null;
+        }
+
+        function setupCanvasEvents() {
+            if (!canvas) return;
+            canvas.style.cursor = 'pointer';
+
+            // Click to remove from filled slot
+            canvas.addEventListener('click', function (e) {
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+
+                const slot = slotFromCanvasCoords(x, y);
+                if (slot && slot.isFilled) {
+                    if (confirm(`Xóa ảnh khỏi slot ${slot.index + 1}?`)) {
+                        removeFromSlot(slot.index);
+                    }
+                }
+            });
+
+            // Drag over canvas → highlight slot
+            canvas.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                if (!draggedPhoto) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+
+                const slot = slotFromCanvasCoords(x, y);
+                const newIndex = slot ? slot.index : null;
+
+                if (newIndex !== highlightedSlotIndex) {
+                    highlightedSlotIndex = newIndex;
+                    renderPreview();
+                }
+            });
+
+            canvas.addEventListener('dragleave', function () {
+                highlightedSlotIndex = null;
+                renderPreview();
+            });
+
+            // Drop on canvas → assign
+            canvas.addEventListener('drop', function (e) {
+                e.preventDefault();
+                if (!draggedPhoto) return;
+
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+
+                const x = (e.clientX - rect.left) * scaleX;
+                const y = (e.clientY - rect.top) * scaleY;
+
+                const slot = slotFromCanvasCoords(x, y);
+                if (slot) {
+                    assignPhotoToSlot(draggedPhoto.id, slot.index, draggedPhoto.url);
+                }
+
+                highlightedSlotIndex = null;
+                renderPreview();
+            });
+        }
+
+        // ===== Upload auto-submit =====
+        function setupUploadAutoSubmit() {
+            const input = document.getElementById('photoInput');
+            const form = document.getElementById('uploadForm');
+            if (!input || !form) return;
+
+            input.addEventListener('change', function () {
+                if (this.files.length > 0) {
+                    form.submit(); // upload xong backend render lại trang
+                }
+            });
+        }
+
+        // ===== Init =====
+        function initCanvas() {
+            if (!canvas || !ctx) return;
+
+            frameImage.crossOrigin = 'anonymous';
+            frameImage.onload = () => {
+                // Load existing photos for pre-filled slots
+                const slotsWithPhotos = slotsData.filter(s => s.photoUrl);
+                if (slotsWithPhotos.length === 0) {
+                    renderPreview();
+                    return;
+                }
+
+                let loadedCount = 0;
+                const totalPhotos = slotsWithPhotos.length;
+
+                slotsWithPhotos.forEach(slot => {
+                    const img = new Image();
+                    img.crossOrigin = 'anonymous';
+                    img.onload = () => {
+                        loadedCount++;
+                        photoImages[slot.index] = img;
+                        if (loadedCount === totalPhotos) {
+                            renderPreview();
+                        }
+                    };
+                    img.onerror = () => {
+                        loadedCount++;
+                        if (loadedCount === totalPhotos) {
+                            renderPreview();
+                        }
+                    };
+                    img.src = slot.photoUrl;
+                });
+            };
+            frameImage.src = frameData.url;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            canvas = document.getElementById('previewCanvas');
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+            }
+
+            setupCanvasEvents();
+            setupLibraryDrag();
+            setupUploadAutoSubmit();
+            initCanvas();
+            updateProgressUI();
+            markUsedPhotos();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Xem ảnh đã ghép</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .page-container {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 10px;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        .preview-image {
+            text-align: center;
+            margin: 20px 0;
+        }
+        .preview-image img {
+            max-width: 100%;
+            max-height: 50vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }
+        .btn {
+            padding: 12px 25px;
+            font-size: 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        .btn-secondary {
+            background: #2196F3;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #0b7dda;
+        }
+        .btn-back {
+            background: #666;
+            color: white;
+        }
+        .btn-back:hover {
+            background: #555;
+        }
+        .empty-message {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+        .all-renders {
+            margin-top: 30px;
+            border-top: 2px solid #eee;
+            padding-top: 20px;
+        }
+        .all-renders h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .render-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        .render-item {
+            text-align: center;
+        }
+        .render-item img {
+            width: 100%;
+            height: auto;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .render-item a {
+            display: block;
+            margin-top: 8px;
+            color: #2196F3;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .render-item a:hover {
+            text-decoration: underline;
+        }
+        .qr-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f9f9f9;
+            border-radius: 10px;
+            text-align: center;
+        }
+        .qr-section h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+        .qr-section img {
+            max-width: 250px;
+            height: auto;
+            border: 3px solid #4CAF50;
+            border-radius: 10px;
+            padding: 10px;
+            background: white;
+        }
+        .qr-section p {
+            color: #666;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        .firebase-link {
+            display: block;
+            margin-top: 10px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 5px;
+            color: #2196F3;
+            text-decoration: none;
+            word-break: break-all;
+            font-size: 12px;
+        }
+        .firebase-link:hover {
+            background: #bbdefb;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="container">
+        <h2>🎉 Ảnh của bạn đã sẵn sàng!</h2>
+
+        {% if renders %}
+            <div class="preview-image">
+                <img src="{{ renders.0.image.url }}" alt="Ảnh đã ghép frame">
+            </div>
+
+            <div class="buttons">
+                <a href="/session/{{ phone }}/print/" class="btn btn-primary">🖨️ In ảnh</a>
+                <a href="{{ renders.0.image.url }}" download class="btn btn-secondary">⬇️ Tải xuống</a>
+                <a href="/session/{{ phone }}/photos/" class="btn btn-back">🔙 Chọn frame khác</a>
+            </div>
+
+            {% if renders.0.qr_code %}
+            <div class="qr-section">
+                <h3>📱 Quét mã QR để tải ảnh về điện thoại</h3>
+                <img src="{{ renders.0.qr_code.url }}" alt="QR Code">
+                <p>Quét mã này bằng camera điện thoại để tải ảnh gốc</p>
+                {% if session.download_url %}
+                <a href="{{ session.download_url }}" class="firebase-link" target="_blank">
+                    🔗 Hoặc click link: {{ session.download_url }}
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if renders|length > 1 %}
+            <div class="all-renders">
+                <h3>Tất cả ảnh đã ghép ({{ renders|length }})</h3>
+                <div class="render-grid">
+                    {% for r in renders %}
+                    <div class="render-item">
+                        <img src="{{ r.image.url }}" alt="Ảnh {{ forloop.counter }}">
+                        <a href="{{ r.image.url }}" download>Tải ảnh {{ forloop.counter }}</a>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-message">
+                <p>Chưa có ảnh nào được ghép frame.</p>
+                <a href="/session/{{ phone }}/photos/" class="btn btn-back">Quay lại chọn ảnh</a>
+            </div>
+        {% endif %}
+        </div>
+    </div>
+</body>
+</html>

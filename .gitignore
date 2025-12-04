@@ -1,0 +1,70 @@
+# ========================
+#  PYTHON
+# ========================
+*.py[cod]
+*$py.class
+*.so
+__pycache__/
+*.pyc
+
+# ========================
+#  VIRTUAL ENVIRONMENT
+# ========================
+venv/
+.venv/
+env/
+ENV/
+
+# ========================
+#  DJANGO
+# ========================
+*.log
+db.sqlite3
+db.sqlite3-journal
+
+# ========================
+#  MEDIA (chỉ giữ thư mục, không giữ file)
+media/photos/*
+!media/photos/.gitkeep
+
+media/renders/*
+!media/renders/.gitkeep
+
+media/qrcodes/*
+!media/qrcodes/.gitkeep
+
+# Frames thì commit để client load template
+# Nếu bạn muốn commit frames → giữ như này:
+# media/frames/* 
+# !media/frames/.gitkeep
+
+# Nếu frames muốn commit tất cả: xóa phần ignore frames đi
+
+# ========================
+#  FIREBASE / GOOGLE CREDENTIALS
+# ========================
+firebase_key.json
+*-firebase-adminsdk-*.json
+firebase-credentials.json
+serviceAccountKey.json
+
+# ========================
+#  ENVIRONMENT VARIABLES
+# ========================
+.env
+.env.local
+*.env
+
+# ========================
+#  IDE / EDITOR
+# ========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ========================
+#  OS / SYSTEM FILES
+# ========================
+.DS_Store
+Thumbs.db

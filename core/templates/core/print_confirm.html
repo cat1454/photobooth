@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Đang in ảnh...</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+        }
+        .page-container {
+            width: 100vw;
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px;
+        }
+        .container {
+            max-width: 600px;
+            background: white;
+            padding: 30px 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .success-icon {
+            font-size: 60px;
+            color: #4CAF50;
+            margin-bottom: 15px;
+        }
+        h2 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 22px;
+        }
+        p {
+            color: #666;
+            font-size: 16px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            margin: 10px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
+        }
+        .btn-primary {
+            background: #4CAF50;
+            color: white;
+        }
+        .btn-primary:hover {
+            background: #45a049;
+        }
+        .btn-secondary {
+            background: #666;
+            color: white;
+        }
+        .btn-secondary:hover {
+            background: #555;
+        }
+        .preview-thumb {
+            max-width: 250px;
+            max-height: 30vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            margin: 15px auto;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="page-container">
+        <div class="container">
+            <div class="success-icon">✅</div>
+        <h2>Ảnh của bạn đã được gửi để in!</h2>
+        
+        {% if render %}
+        <img src="{{ render.image.url }}" class="preview-thumb" alt="Ảnh đã chọn">
+        {% endif %}
+        
+        <p>
+            Vui lòng đợi trong giây lát.<br>
+            Ảnh của bạn sẽ được in ra ngay!
+        </p>
+        
+        <a href="/session/{{ phone }}/preview/" class="btn btn-primary">Xem lại ảnh</a>
+        <a href="/session/{{ phone }}/photos/" class="btn btn-secondary">Ghép ảnh mới</a>
+        </div>
+    </div>
+    </div>
+    
+    <script>
+        // Tự động chuyển về preview sau 5 giây
+        setTimeout(function() {
+            window.location.href = '/session/{{ phone }}/preview/';
+        }, 5000);
+    </script>
+</body>
+</html>

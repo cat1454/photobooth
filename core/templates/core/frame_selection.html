@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chọn Frame - Photobooth</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .frames-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .frame-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+        }
+        .frame-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+        .frame-image {
+            width: 100%;
+            height: 400px;
+            object-fit: contain;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        .frame-info {
+            padding: 20px;
+            text-align: center;
+        }
+        .frame-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            color: #333;
+        }
+        .frame-info .slot-count {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        .select-btn {
+            width: 100%;
+            padding: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+        }
+        .select-btn:hover {
+            opacity: 0.9;
+        }
+        .phone-display {
+            text-align: center;
+            color: white;
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎨 CHỌN KHUNG HÌNH</h1>
+            <p>Bước 1: Chọn frame bạn thích</p>
+        </div>
+        
+        <div class="phone-display">
+            📱 Session: <strong>{{ phone }}</strong>
+        </div>
+
+        <div class="frames-grid">
+            {% for frame in frames %}
+            <form method="POST" class="frame-card">
+                {% csrf_token %}
+                <input type="hidden" name="frame_id" value="{{ frame.id }}">
+                
+                <img src="{{ frame.image.url }}" alt="{{ frame.name }}" class="frame-image">
+                
+                <div class="frame-info">
+                    <h3>{{ frame.name }}</h3>
+                    <div class="slot-count">
+                        📸 {{ frame.slot_count }} ảnh
+                    </div>
+                    <button type="submit" class="select-btn">
+                        Chọn Frame Này
+                    </button>
+                </div>
+            </form>
+            {% empty %}
+            <p style="color: white; text-align: center; grid-column: 1 / -1;">
+                Chưa có frame nào. Vui lòng thêm frame từ Admin.
+            </p>
+            {% endfor %}
+        </div>
+    </div>
+</body>
+</html>
